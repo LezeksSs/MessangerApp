@@ -1,45 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:messanger_app/auth/auth_service.dart';
-import 'package:messanger_app/components/button_template.dart';
-import 'package:messanger_app/components/textfield_template.dart';
 
-class LoginPage extends StatefulWidget {
+import '../components/button_template.dart';
+import '../components/textfield_template.dart';
+
+class RegisterPage extends StatelessWidget {
+  final TextEditingController _nicknameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _pwController = TextEditingController();
+  final TextEditingController _confirmPwController = TextEditingController();
+
+  // tap to go to login page
   final void Function()? onTap;
 
-  LoginPage({
+  RegisterPage({
     super.key,
     required this.onTap,
   });
 
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  // email and pw text controllers
-  final TextEditingController _loginController = TextEditingController();
-  final TextEditingController _pwController = TextEditingController();
-
-  bool _rememberMe = false;
-
-  void _toggleRememberMe(bool? value) {
-    setState(() {
-      _rememberMe = value!;
-      print(_rememberMe);
-    });
-  }
-
-  // login method
-  void login(BuildContext context) {
+  // register method
+  void register(BuildContext context) {
     final authService = AuthService();
-
-    try {
-      authService.authenticateUser(_loginController.text, _pwController.text, _rememberMe, context);
-    } catch (e) {
+    if (_pwController.text == _confirmPwController.text) {
+      try {
+        authService.signUp(_nicknameController.text, _emailController.text, _pwController.text, context);
+      } catch (e) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(e.toString()),
+          ),
+        );
+      }
+    } else {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(e.toString()),
+          title: Text("Password does not match!"),
         ),
       );
     }
@@ -60,9 +57,10 @@ class _LoginPageState extends State<LoginPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             SizedBox(height: 50),
+
             // welcome back message
             Text(
-              "Welcome back",
+              "Let's create an account for you",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 16,
@@ -71,12 +69,22 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(height: 25),
             // login text field
             MyTextField(
-              hintText: "Login",
+              hintText: "Nickname",
               obscureText: false,
-              controller: _loginController,
+              controller: _nicknameController,
             ),
 
             SizedBox(height: 10),
+
+            // email text field
+            MyTextField(
+              hintText: "Email",
+              obscureText: false,
+              controller: _emailController,
+            ),
+
+            SizedBox(height: 10),
+
             // password text field
             MyTextField(
               hintText: "Password",
@@ -86,31 +94,19 @@ class _LoginPageState extends State<LoginPage> {
 
             SizedBox(height: 10),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Row(
-                children: [
-                  Text(
-                    "Remember me?",
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
-                  ),
-                  Checkbox(
-                    checkColor: Colors.black,
-                    activeColor: Colors.grey[400],
-                    value: _rememberMe,
-                    onChanged: _toggleRememberMe,
-                  ),
-                ],
-              ),
+            // confirm pw text field
+            MyTextField(
+              hintText: "Confirm password",
+              obscureText: true,
+              controller: _confirmPwController,
             ),
 
-            SizedBox(height: 10),
+            SizedBox(height: 25),
 
             // sign in button
             MyButton(
-              text: "Login",
-              onTap: () => login(context),
+              text: "Register",
+              onTap: () => register(context),
             ),
 
             SizedBox(height: 25),
@@ -120,14 +116,14 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Not a member? ",
+                  "Already have an account? ",
                   style:
                       TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
                 GestureDetector(
-                  onTap: widget.onTap,
+                  onTap: onTap,
                   child: Text(
-                    "Register now",
+                    "Login now",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary),
