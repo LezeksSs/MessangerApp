@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:messanger_app/auth/auth_service.dart';
+
 
 import '../components/button_template.dart';
 import '../components/textfield_template.dart';
+import '../services/auth/auth_service.dart';
 
 class RegisterPage extends StatelessWidget {
   final TextEditingController _nicknameController = TextEditingController();

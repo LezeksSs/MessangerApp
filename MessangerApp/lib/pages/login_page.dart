@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:messanger_app/auth/auth_service.dart';
+
 import 'package:messanger_app/components/button_template.dart';
 import 'package:messanger_app/components/textfield_template.dart';
+
+import '../services/auth/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function()? onTap;

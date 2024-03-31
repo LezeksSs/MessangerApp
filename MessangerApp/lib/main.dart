@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:messanger_app/pages/home_page.dart';
+import 'package:messanger_app/services/auth/login_or_register.dart';
 import 'package:messanger_app/themes/light_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'auth/login_or_register.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

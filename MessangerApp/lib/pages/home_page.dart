@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:messanger_app/auth/auth_service.dart';
 import 'package:messanger_app/components/drawer_template.dart';
 
 class HomePage extends StatelessWidget {
