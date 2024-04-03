@@ -25,8 +25,8 @@ class HomePage extends StatelessWidget {
 
   // build a list of chats
   Widget _buildChatList() {
-    return StreamBuilder(
-      stream: _chatService.getChatsStream(),
+    return FutureBuilder(
+      future: _chatService.getChats(),
       builder: (context, snapshot) {
         // error
         if (snapshot.hasError) {
@@ -53,7 +53,7 @@ class HomePage extends StatelessWidget {
       text: userData["name"],
       onTap: () {
         Navigator.push(context, MaterialPageRoute(
-          builder: (context) => ChatPage(name: userData["name"],),));
+          builder: (context) => ChatPage(name: userData["name"], id: userData["id"],),));
       },
     );
   }
