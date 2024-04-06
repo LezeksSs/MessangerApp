@@ -1,8 +1,11 @@
-// const String authBaseUrl = 'http://192.168.1.150:8080/auth/login';
-const String authBaseUrl = 'http://192.168.133.152:8080/auth/login';
+import 'package:jwt_decode/jwt_decode.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-const String registerBaseUrl = 'http://1192.168.133.152:8080/auth/register';
-// const String registerBaseUrl = 'http://192.168.1.150:8080/auth/register';
+const String authBaseUrl = 'http://192.168.1.150:8080/auth/login';
+// const String authBaseUrl = 'http://192.168.133.152:8080/auth/login';
 
+const String registerBaseUrl = 'http://192.168.1.150:8080/auth/register';
+// const String registerBaseUrl = 'http://1192.168.133.152:8080/auth/register';
 
-const String getChatsBaseUrl = 'http://192.168.133.152:8080/chat';
+const String getChatsBaseUrl = 'http://192.168.1.150:8080/chat';
+// const String getChatsBaseUrl = 'http://192.168.133.152:8080/chat';

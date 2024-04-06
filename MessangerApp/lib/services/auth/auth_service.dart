@@ -2,13 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:jwt_decode/jwt_decode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:messanger_app/config/constants.dart';
 
-class AuthService {
+import '../../data/database.dart';
 
-  Future<void> authenticateUser(String nickname, String password, bool rememberMe, BuildContext context) async {
+class AuthService {
+  final _myBox = Hive.box('mybox');
+  ToDoDataBase db = ToDoDataBase();
+
+  Future<void> authenticateUser(String nickname, String password,
+      bool rememberMe, BuildContext context) async {
     final url = Uri.parse(authBaseUrl);
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -28,6 +35,8 @@ class AuthService {
         await prefs.setString('token', token);
         await prefs.setBool('rememberMe', rememberMe);
 
+        db.createInitialData(token);
+
         print(prefs.getString('token') ?? 'no token');
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
@@ -40,7 +49,8 @@ class AuthService {
 
   // singup
 
-  Future<void> signUp(String nickname, String email, String password, BuildContext context) async {
+  Future<void> signUp(String nickname, String email, String password,
+      BuildContext context) async {
     final url = Uri.parse(registerBaseUrl);
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -60,6 +70,8 @@ class AuthService {
         final String token = responseData['token'];
         await prefs.setString('token', token);
 
+        db.createInitialData(token);
+
         print(prefs.getString('token') ?? 'no token');
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
@@ -75,8 +87,10 @@ class AuthService {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('rememberMe');
+
+    db.deleteData();
+
     Navigator.of(context).pushReplacementNamed('/login');
   }
-
 
 }

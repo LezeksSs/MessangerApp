@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:jwt_decode/jwt_decode.dart';
+import 'package:messanger_app/components/chat_bubble.dart';
 import 'package:messanger_app/components/textfield_template.dart';
+import 'package:messanger_app/config/constants.dart';
 import 'package:messanger_app/services/auth/auth_service.dart';
 import 'package:messanger_app/services/chat/chat_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/database.dart';
 
 class ChatPage extends StatelessWidget {
   final String name;
@@ -20,6 +26,8 @@ class ChatPage extends StatelessWidget {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
 
+  ToDoDataBase db = ToDoDataBase();
+
   // send message
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -28,11 +36,22 @@ class ChatPage extends StatelessWidget {
     }
   }
 
+  int getCurrentUserId() {
+    Map<String, dynamic> payload = Jwt.parseJwt(db.getToken());
+
+    int userId = payload["id"];
+
+    return userId;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(name + " ${id}"),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.grey,
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -74,8 +93,22 @@ class ChatPage extends StatelessWidget {
   // build messsage item
   Widget _buildMessageItem(
       Map<String, dynamic> userData, BuildContext context) {
+    // is current user
+    bool isCurrentUser = userData["user"]["id"] == getCurrentUserId();
+
+    // align message to the right if sender is the current user, otherwise left
+    var alignment =
+        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
+
     // display all chats
-    return Text(userData["text"]);
+    return Container(
+      alignment: alignment,
+      child: ChatBubble(
+        message: userData["text"],
+        isCurrentUser: isCurrentUser,
+      ),
+      // child: Text(userData["user"]["id"].toString()),
+    );
   }
 
   // build message input
@@ -89,9 +122,19 @@ class ChatPage extends StatelessWidget {
             obscureText: false,
           ),
         ),
-        IconButton(
-          onPressed: sendMessage,
-          icon: Icon(Icons.arrow_upward),
+        Container(
+          decoration: const BoxDecoration(
+            color: Colors.green,
+            shape: BoxShape.circle,
+          ),
+          margin: const EdgeInsets.only(right: 25),
+          child: IconButton(
+            onPressed: sendMessage,
+            icon: Icon(
+              Icons.arrow_upward,
+              color: Colors.white,
+            ),
+          ),
         ),
       ],
     );

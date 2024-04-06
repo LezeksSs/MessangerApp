@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:messanger_app/themes/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:messanger_app/pages/home_page.dart';
 import 'package:messanger_app/services/auth/login_or_register.dart';
 import 'package:messanger_app/themes/light_theme.dart';
@@ -6,24 +9,41 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final jwtToken = prefs.getString('token');
   final rememberMe = prefs.getBool('rememberMe') ?? false;
 
+  await Hive.initFlutter();
+  var box = await Hive.openBox('mybox');
+
   if (rememberMe && jwtToken != null) {
     final isValidToken = await validateToken(jwtToken);
     if (isValidToken) {
-      runApp( const MyApp(isAuthenticated: true,));
+      runApp(ChangeNotifierProvider(
+        create: (context) => ThemeProvider(),
+        child: const MyApp(
+          isAuthenticated: true,
+        ),
+      ));
     } else {
       await prefs.remove('token');
       await prefs.remove('rememberMe');
-      runApp( const MyApp(isAuthenticated: false,));
+      runApp(ChangeNotifierProvider(
+        create: (context) => ThemeProvider(),
+        child: const MyApp(
+          isAuthenticated: false,
+        ),
+      ));
     }
   } else {
-    runApp( const MyApp(isAuthenticated: false,));
+    runApp(ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(
+        isAuthenticated: false,
+      ),
+    ));
   }
 }
 
@@ -56,8 +76,7 @@ class MyApp extends StatelessWidget {
       },
       debugShowCheckedModeBanner: false,
       home: isAuthenticated ? HomePage() : LoginOrRegister(),
-      theme: lightMode,
+      theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }
 }
-
