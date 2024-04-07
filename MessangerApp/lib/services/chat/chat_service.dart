@@ -38,26 +38,60 @@ class ChatService {
     }
   }
 
-// send message
-  Future<void> sendMessage(int chatId, message) async {
+  Future<void> createChat(String userTo) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
-    final response = await http.post(Uri.parse(getChatsBaseUrl + "/${chatId}/message"),
+
+    final response = await http.post(Uri.parse(getChatsBaseUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': 'Bearer $token'
         },
         body: jsonEncode(<String, String>{
-          'text': message,
+          'userTo': userTo,
         }));
+    if (response.statusCode == 200) {
+      print('Ok: ${response.body}');
+    } else {
+      print('Ошибка аутентификации: ${response.body}');
+    }
+  }
+
+  Future<void> deleteChat(int chatId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString("token");
+
+    final response = await http
+        .delete(Uri.parse(getChatsBaseUrl + "/${chatId}"), headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token'
+    });
+  }
+
+// send message
+  Future<void> sendMessage(int chatId, message) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString("token");
+    final response =
+        await http.post(Uri.parse(getChatsBaseUrl + "/${chatId}/message"),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token'
+            },
+            body: jsonEncode(<String, String>{
+              'text': message,
+            }));
   }
 
 // get messages
   Future<List<Map<String, dynamic>>> getMessages(int chatId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
-    final response = await http.get(Uri.parse(getChatsBaseUrl + "/${chatId}/message"), headers: {
+    final response = await http
+        .get(Uri.parse(getChatsBaseUrl + "/${chatId}/message"), headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': 'Bearer $token'
