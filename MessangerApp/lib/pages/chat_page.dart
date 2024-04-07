@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/database.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   final String name;
   final int id;
 
@@ -19,11 +19,17 @@ class ChatPage extends StatelessWidget {
     required this.id,
   });
 
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   // text controller
   final TextEditingController _messageController = TextEditingController();
 
   // chat & auth services
   final ChatService _chatService = ChatService();
+
   final AuthService _authService = AuthService();
 
   ToDoDataBase db = ToDoDataBase();
@@ -31,8 +37,11 @@ class ChatPage extends StatelessWidget {
   // send message
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      await _chatService.sendMessage(id, _messageController.text);
+      await _chatService.sendMessage(widget.id, _messageController.text);
       _messageController.clear();
+      setState(() {
+        build(context);
+      });
     }
   }
 
@@ -48,7 +57,7 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(name + " ${id}"),
+        title: Text(widget.name + " ${widget.id}"),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.grey,
         elevation: 0,
@@ -70,7 +79,7 @@ class ChatPage extends StatelessWidget {
   // build message list
   Widget _buildMessageList() {
     return FutureBuilder(
-      future: _chatService.getMessages(id),
+      future: _chatService.getMessages(widget.id),
       builder: (context, snapshot) {
         // error
         if (snapshot.hasError) {
