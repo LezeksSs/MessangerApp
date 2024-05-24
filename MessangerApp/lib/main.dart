@@ -50,7 +50,7 @@ void main() async {
 Future<bool> validateToken(String token) async {
   final response = await http.get(
     // Uri.parse('http://192.168.1.150:8080/token/validate?token=$token}'),
-    Uri.parse('http://192.168.93.152:8080/token/validate?token=$token}'),
+    Uri.parse('http://192.168.226.152:8080/token/validate?token=$token}'),
   );
 
   if (response.statusCode == 200) {

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:jwt_decode/jwt_decode.dart';
 import 'package:messanger_app/components/chat_bubble.dart';
@@ -6,6 +9,7 @@ import 'package:messanger_app/config/constants.dart';
 import 'package:messanger_app/services/auth/auth_service.dart';
 import 'package:messanger_app/services/chat/chat_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 import '../data/database.dart';
 
@@ -32,18 +36,94 @@ class _ChatPageState extends State<ChatPage> {
 
   final AuthService _authService = AuthService();
 
+  final ScrollController _scrollController = ScrollController();
+
+  late StompClient stompClient;
+
   ToDoDataBase db = ToDoDataBase();
 
+  List<Map<String, dynamic>>? messages;
+
+  Future<void> setData() async {
+    List<Map<String, dynamic>> data = await _chatService.getMessages(widget.id);
+    setState(() {
+      messages = data;
+    });
+  }
+
+
+  @override
+  void initState() {
+    setData();
+    stompClient = StompClient(
+      config: StompConfig(
+        url: "ws://10.0.2.2:8080/ws/websocket",
+        // url: "ws://192.168.1.150:8080/ws",
+        onConnect: onConnectCallback,
+        beforeConnect: () async {
+          print(db.getToken());
+          print('Waiting to connect...');
+          await Future.delayed(Duration(seconds: 1));
+        },
+        onWebSocketError: (dynamic error) => print(error.toString()),
+        stompConnectHeaders: {'Authorization': 'Bearer ${db.getToken()}'},
+        webSocketConnectHeaders: {'Authorization': 'Bearer ${db.getToken()}'},
+      ),
+    );
+    stompClient.activate();
+  }
+
+  void onConnectCallback(StompFrame frame) {
+    stompClient.subscribe(
+      destination: '/topic/${widget.id}/messages',
+      // headers: {'Authorization': 'Bearer ${db.getToken()}'},
+      callback: (frame) {
+        if (frame.body != null) {
+
+          Map<String, dynamic> obj = json.decode(frame.body!);
+          setState(() {
+            messages!.add(obj);
+            _scrollController.animateTo(
+                -_scrollController.position.maxScrollExtent - 300,
+                duration: Duration(milliseconds: 200),
+                curve: Curves.easeInOut
+            );
+          });
+          // print(obj['text']);
+          // print(obj);
+          // messages.add(obj["text"]);
+          // print(messages);
+        }
+      },
+    );
+  }
+
   // send message
-  void sendMessage() async {
+  void sendMessage() {
     if (_messageController.text.isNotEmpty) {
-      await _chatService.sendMessage(widget.id, _messageController.text);
+      stompClient.send(
+        destination: '/app/${widget.id}/message',
+        // headers: {'Authorization': 'Bearer ${db.getToken()}'},
+        body: jsonEncode(
+          <String, String>{
+            'text': _messageController.text,
+          },
+        ),
+      );
       _messageController.clear();
-      setState(() {
-        build(context);
-      });
     }
   }
+
+  // send message
+  // void sendMessage() async {
+  //   if (_messageController.text.isNotEmpty) {
+  //     await _chatService.sendMessage(widget.id, _messageController.text);
+  //     _messageController.clear();
+  //     setState(() {
+  //       build(context);
+  //     });
+  //   }
+  // }
 
   int getCurrentUserId() {
     Map<String, dynamic> payload = Jwt.parseJwt(db.getToken());
@@ -55,25 +135,39 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.name + " ${widget.id}"),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.grey,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // display all messages
-          Expanded(
-            child: _buildMessageList(),
-          ),
+    if (messages != null) {
+      return Scaffold(
+            appBar: AppBar(
+              title: Text(widget.name + " ${widget.id}"),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.grey,
+              elevation: 0,
+            ),
+            body: Column(
+              children: [
+                // display all messages
+                Expanded(
+                  child:
+                  ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    itemCount: messages!.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: _buildMessageItem(messages!.reversed.toList()[index], context),
+                      );
+                    },
+                  ),
+                ),
 
-          // user input
-          _buildUserInput(),
-        ],
-      ),
-    );
+                // user input
+                _buildUserInput(),
+              ],
+            ),
+          );
+    } else {
+      return CircularProgressIndicator();
+    }
   }
 
   // build message list
@@ -147,5 +241,12 @@ class _ChatPageState extends State<ChatPage> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    stompClient.deactivate();
+    _messageController.dispose();
+    super.dispose();
   }
 }
